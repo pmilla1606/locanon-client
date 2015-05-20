@@ -5,6 +5,15 @@
 'use strict';
 
 var React = require('react-native');
+var stround = require('stround');
+var round = stround.round;
+var RefreshableListView = require('react-native-refreshable-listview')
+// Components
+var LoadingView = require('./components/loading_view_component');
+var SingleMessageView = require('./components/message_view_component');
+
+var ROUNDING_PRECISION = 3;
+
 var {
   AppRegistry,
   StyleSheet,
@@ -12,87 +21,124 @@ var {
   View,
   TouchableHighlight,
   TextInput,
-  ActivityIndicatorIOS
+  ActivityIndicatorIOS,
+  ListView,
+  MapView
 } = React;
 
 var locanon = React.createClass({
   getInitialState: function(){
+    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return {
       currentMessageInput: '',
-      currentLocation: 'unknown',
+      currentLong: 0,
+      currentLat: 0,
       messagesAtThisLocation: null,
       loadingLocation: true,
+      dataSource: ds.cloneWithRows(['row1', 'row2']),
     }
   },
 
   componentWillMount: function() {
-
   },
 
   componentDidMount: function() {
-    navigator.geolocation.getCurrentPosition(
-      (currentLocation) => {
-        this.setState({currentLocation, loadingLocation: false})
-      },
-      (error) => console.error(error),
-      {enableHighAccuracy: true, timeout: 25000, maximumAge: 1000}
-    );
+    this.geoInit();
+  },
+
+  geoInit: function() {
+    navigator.geolocation.getCurrentPosition(this.geoSuccess, this.geoError, {enableHighAccuracy: true, timeout: 25000, maximumAge: 300000});
+  },
+
+  geoSuccess: function(position) {
+    this.setState({
+      currentLong: round(position.coords.longitude, ROUNDING_PRECISION),
+      currentLat: round(position.coords.latitude, ROUNDING_PRECISION),
+      loadingLocation: false
+    });
+
+    this.getMessagesForThisLocation();
+  },
+
+  geoError: function(error) {
+    console.log('Geo Error -- Trying Again');
+    this.geoInit();
   },
 
   getMessagesForThisLocation: function() {
+
+    var that = this;
     var currentLocation;
 
+    this.setState({
+      loadingLocation: true
+    });
+
+
     if (this.state.currentLocation !== 'unknown') {
-      currentLocation = `${this.state.currentLocation.coords.latitude}--${this.state.currentLocation.coords.longitude}`
+      currentLocation = `${this.state.currentLong}--${this.state.currentLat}`
     } else {
       return false
     }
 
     var queryUrl = 'http://localhost:1337/app/'+currentLocation;
-    
+    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     fetch(queryUrl, {method: 'get'}).then(function(response) {
       return response.json().then(function(json) {
         console.log(json)
+        that.setState({
+          dataSource: ds.cloneWithRows(json),
+          loadingLocation: false
+        });
+
       });
     });
   },
 
   saveNewMessageForThisLocation: function() {
-    
-    var dummy = {
-      a: 1,
-      b: 2
-    };
-    
-    fetch('http://localhost:1337/app', {
-        method: 'post',
-        headers: {
-          'Accept': 'application/json, text/plain, */*',
-          'Content-Type': 'x-www-form-urlencoded'
-        },
-        data: 'json='+JSON.stringify(dummy)
-      }).then(function(response) {
-      return response.json().then(function(json){
-        console.log(json)
+    var data;
+    var that = this;
+
+    if (this.state.currentMessageInput === '') {
+
+      return false
+
+    } else {
+
+      this.setState({
+        loadingLocation: true
       });
-    });
+
+      data = {
+        lng: this.state.currentLong,
+        lat: this.state.currentLat,
+        message: this.state.currentMessageInput
+      };
+
+      fetch('http://localhost:1337/app', {
+          method: 'post',
+          headers: {
+            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+          },
+          body: 'data='+JSON.stringify(data)
+        }).then(function(response) {
+        return response.json().then(function(json){
+          that.getMessagesForThisLocation();
+        });
+      });
+    }
   },
 
   render: function() {
-    console.log(this.state)
-    var loadingView = this.state.loadingLocation ? 
-      <View style={styles.loadingViewContainer}>
-        <ActivityIndicatorIOS
-            animating={this.state.loadingLocation}
-            style={[styles.centering, styles.gray, {height: 40}]}
-            color="white"
-            />
-      </View> : null;
+    var loadingScreen = this.state.loadingLocation ? <LoadingView isLoading={true} /> : null;
+    return (
 
-    return ( 
-    
       <View style={styles.container}>
-        {loadingView}
+        <MapView
+          style={styles.map}
+          region={ {latitude: Number(this.state.currentLat), longitude: Number(this.state.currentLong), latitudeDelta: 10, longitudeDelta: 10} }
+          showsUserLocation={true}
+        />
         <TextInput
           style={{height: 40, borderColor: 'gray', borderWidth: 1}}
           onChangeText={(text) => this.setState({currentMessageInput: text})}
@@ -105,7 +151,15 @@ var locanon = React.createClass({
           <Text>Post Locations</Text>
         </TouchableHighlight>
 
+        <RefreshableListView
+          dataSource={this.state.dataSource}
+          renderRow={(rowData) => <SingleMessageView message={rowData}/>}
+          loadData={this.getMessagesForThisLocation}
+          refreshDescription="Refreshing articles"
+        />
 
+
+        {loadingScreen}
 
       </View>
     );
@@ -116,16 +170,11 @@ var styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'stretch',
     backgroundColor: '#F5FCFF',
   },
-  loadingViewContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 300,
-    height: 300,
-    backgroundColor: 'rgba(0,0,0,0.8'
+  map: {
+    height: 100
   }
 });
 

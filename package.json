@@ -6,6 +6,8 @@
     "start": "node_modules/react-native/packager/packager.sh"
   },
   "dependencies": {
-    "react-native": "^0.4.4"
+    "react-native": "^0.4.4",
+    "react-native-refreshable-listview": "^1.2.0",
+    "stround": "^0.2.2"
   }
 }
