@@ -81,7 +81,7 @@ var locanon = React.createClass({
       return false
     }
 
-    var queryUrl = 'http://localhost:1337/app/'+currentLocation;
+    var queryUrl = 'http://45.55.242.156:1337/app/'+currentLocation;
     var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     fetch(queryUrl, {method: 'get'}).then(function(response) {
       return response.json().then(function(json) {
@@ -115,7 +115,7 @@ var locanon = React.createClass({
         message: this.state.currentMessageInput
       };
 
-      fetch('http://localhost:1337/app', {
+      fetch('http://45.55.242.156:1337/app', {
           method: 'post',
           headers: {
             "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
