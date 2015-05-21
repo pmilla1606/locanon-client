@@ -27,7 +27,8 @@ var LoadingView = React.createClass({
   },
   render: function() {
     return(
-      <View ref="loadingView" style={styles.loadingViewContainerLoading}>
+      <View ref="loadingView" style={styles.loadingViewContainer}>
+        <Text>Loading Loading Loading</Text>
         <ActivityIndicatorIOS
             animating={this.props.isLoading}
             style={[styles.centering, styles.gray, {height: 40}]}
@@ -45,7 +46,9 @@ var styles = StyleSheet.create({
     left: 0,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(0,0,0,0.8)'
+    opacity: 0,
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)'
   }
 });
 

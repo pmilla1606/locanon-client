@@ -13,6 +13,8 @@ var LoadingView = require('./components/loading_view_component');
 var SingleMessageView = require('./components/message_view_component');
 
 var ROUNDING_PRECISION = 3;
+var BASE_QUERY_URL = 'http://45.55.242.156:1337/app' //prod
+//var BASE_QUERY_URL = 'http://localhost:1337/app/' //dev
 
 var {
   AppRegistry,
@@ -66,7 +68,7 @@ var locanon = React.createClass({
   },
 
   getMessagesForThisLocation: function() {
-
+    console.log('fetching ow');
     var that = this;
     var currentLocation;
 
@@ -81,17 +83,22 @@ var locanon = React.createClass({
       return false
     }
 
-    var queryUrl = 'http://45.55.242.156:1337/app/'+currentLocation;
     var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    fetch(queryUrl, {method: 'get'}).then(function(response) {
-      return response.json().then(function(json) {
-        console.log(json)
-        that.setState({
-          dataSource: ds.cloneWithRows(json),
-          loadingLocation: false
-        });
-
+    
+    fetch(BASE_QUERY_URL+currentLocation, {
+      method: 'get'
+    })
+    .then(that.status)
+    .then(that.json)
+    .then(function(json){
+      console.log('Get success! ', json)
+      that.setState({
+        dataSource: ds.cloneWithRows(json),
+        loadingLocation: false
       });
+    })
+    .catch(function(error){
+      console.log('ERROR', error)
     });
   },
 
@@ -105,29 +112,54 @@ var locanon = React.createClass({
 
     } else {
 
-      this.setState({
+      that.setState({
         loadingLocation: true
       });
 
       data = {
-        lng: this.state.currentLong,
-        lat: this.state.currentLat,
-        message: this.state.currentMessageInput
+        lng: that.state.currentLong,
+        lat: that.state.currentLat,
+        message: that.state.currentMessageInput
       };
 
-      fetch('http://45.55.242.156:1337/app', {
-          method: 'post',
-          headers: {
-            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
-          },
-          body: 'data='+JSON.stringify(data)
-        }).then(function(response) {
-        return response.json().then(function(json){
+      fetch(BASE_QUERY_URL, {
+        method: 'post',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(that.status)
+      .then(that.json)
+      .then(function(json){
+        console.log('Put success! ', json)
+        that.setState({
+          loadingLocation: false
+        }, function() {
           that.getMessagesForThisLocation();
         });
+      })
+      .catch(function(error){
+        console.log('ERROR', error)
       });
+
     }
   },
+  
+  // fetch helpers
+  status: function (response) {
+    console.log('status', response)
+    if (response.status >= 200 && response.status < 300) {
+      return response
+    }
+    throw new Error(response.statusText)
+  },
+
+  json: function(response) {
+    return response.json()
+  },
+  // end fetch helpers
 
   render: function() {
     var loadingScreen = this.state.loadingLocation ? <LoadingView isLoading={true} /> : null;
@@ -140,14 +172,11 @@ var locanon = React.createClass({
           showsUserLocation={true}
         />
         <TextInput
-          style={{height: 40, borderColor: 'gray', borderWidth: 1}}
+          style={styles.inputField}
           onChangeText={(text) => this.setState({currentMessageInput: text})}
         />
-        <TouchableHighlight onPress={this.getMessagesForThisLocation}>
-          <Text>Get Locations</Text>
-        </TouchableHighlight>
-
-        <TouchableHighlight onPress={this.saveNewMessageForThisLocation}>
+        
+        <TouchableHighlight onPress={this.saveNewMessageForThisLocation} style={styles.submitButton}>
           <Text>Post Locations</Text>
         </TouchableHighlight>
 
@@ -158,9 +187,9 @@ var locanon = React.createClass({
           refreshDescription="Refreshing articles"
         />
 
+        <Text>{this.state.loadingLocation ? 'Loading' : 'Not Loading'}</Text>
 
         {loadingScreen}
-
       </View>
     );
   }
@@ -174,8 +203,23 @@ var styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   map: {
-    height: 100
+    height: 200
+  },
+  inputField: {
+    alignSelf: 'stretch',
+    flex: 0,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#cccccc'
+  },
+  submitButton: {
+    alignSelf: 'stretch',
+    flex: 0,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#cccccc'
   }
+
 });
 
 AppRegistry.registerComponent('locanon', () => locanon);
