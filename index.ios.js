@@ -13,7 +13,7 @@ var LoadingView = require('./components/loading_view_component');
 var SingleMessageView = require('./components/message_view_component');
 
 var ROUNDING_PRECISION = 3;
-var BASE_QUERY_URL = 'http://45.55.242.156:1337/app' //prod
+var BASE_QUERY_URL = 'http://45.55.242.156:1337/app/' //prod
 //var BASE_QUERY_URL = 'http://localhost:1337/app/' //dev
 
 var {
@@ -25,7 +25,8 @@ var {
   TextInput,
   ActivityIndicatorIOS,
   ListView,
-  MapView
+  MapView,
+  ScrollView
 } = React;
 
 var locanon = React.createClass({
@@ -93,7 +94,7 @@ var locanon = React.createClass({
     .then(function(json){
       console.log('Get success! ', json)
       that.setState({
-        dataSource: ds.cloneWithRows(json),
+        dataSource: ds.cloneWithRows(json.reverse()),
         loadingLocation: false
       });
     })
@@ -163,34 +164,39 @@ var locanon = React.createClass({
 
   render: function() {
     var loadingScreen = this.state.loadingLocation ? <LoadingView isLoading={true} /> : null;
-    return (
+    return (        
+        <View style={styles.container}>
+          <MapView
+            style={styles.map}
+            region={ {latitude: Number(this.state.currentLat), longitude: Number(this.state.currentLong), latitudeDelta: 10, longitudeDelta: 10} }
+            showsUserLocation={true}
+          />
+          <TextInput
+            style={styles.inputField}
+            enablesReturnKeyAutomatically={true}
+            returnKeyType="go"
+            clearTextOnFocue={true}
+            onChangeText={(text) => this.setState({currentMessageInput: text})}
+            placeholder={'type some thoughts'}
+          />
+          
+          <TouchableHighlight 
+            onPress={this.saveNewMessageForThisLocation} 
+            style={styles.submitButton}
+            underlayColor={'#16a085'}>
+            <Text style={styles.submitButtonText}>post some thoughts</Text>
+          </TouchableHighlight>
 
-      <View style={styles.container}>
-        <MapView
-          style={styles.map}
-          region={ {latitude: Number(this.state.currentLat), longitude: Number(this.state.currentLong), latitudeDelta: 10, longitudeDelta: 10} }
-          showsUserLocation={true}
-        />
-        <TextInput
-          style={styles.inputField}
-          onChangeText={(text) => this.setState({currentMessageInput: text})}
-        />
-        
-        <TouchableHighlight onPress={this.saveNewMessageForThisLocation} style={styles.submitButton}>
-          <Text>Post Locations</Text>
-        </TouchableHighlight>
+          <RefreshableListView
+            dataSource={this.state.dataSource}
+            renderRow={(rowData) => <SingleMessageView message={rowData}/>}
+            loadData={this.getMessagesForThisLocation}
+            refreshDescription="Loading..."
+          />
 
-        <RefreshableListView
-          dataSource={this.state.dataSource}
-          renderRow={(rowData) => <SingleMessageView message={rowData}/>}
-          loadData={this.getMessagesForThisLocation}
-          refreshDescription="Refreshing articles"
-        />
+          <Text>{this.state.loadingLocation ? 'fetching' : ' ¯\\_(ツ)_/¯'}</Text>
+        </View>
 
-        <Text>{this.state.loadingLocation ? 'Loading' : 'Not Loading'}</Text>
-
-        {loadingScreen}
-      </View>
     );
   }
 });
@@ -200,24 +206,34 @@ var styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'stretch',
-    backgroundColor: '#F5FCFF',
   },
   map: {
-    height: 200
+    height: 50
   },
   inputField: {
     alignSelf: 'stretch',
     flex: 0,
     height: 50,
     borderWidth: 1,
-    borderColor: '#cccccc'
+    borderColor: '#1abc9c',
+    margin: 10,
+    padding: 5,
+    marginBottom: 0
   },
   submitButton: {
     alignSelf: 'stretch',
     flex: 0,
     height: 50,
-    borderWidth: 1,
-    borderColor: '#cccccc'
+    backgroundColor: '#1abc9c',
+    margin: 10,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '100',
+    fontFamily: 'Helvetica',
   }
 
 });

@@ -20,7 +20,7 @@ var SingleMessageView = React.createClass({
   componentDidMount: function() {
     AnimationExperimental.startAnimation({
       node: this.refs.singleMessageView,
-      duration: 350,
+      duration: 500,
       easing: 'easeInQuad',
       property: 'opacity',
       toValue: 1,
@@ -36,13 +36,12 @@ var SingleMessageView = React.createClass({
     //console.log(this.props)
     return(
       <View ref="singleMessageView" style={styles.messageViewContainer}>
-        <Icon name="thumbs-down" size={30} color="#e3e3e3"  onPress={this.downVote} style={styles.vote} />
+
         
 
         <Text style={styles.messageText}>{this.props.message.messageString}</Text>
-        <Text style={styles.voteCountText}>({this.props.message.likes - this.props.message.dislikes})</Text>
         
-        <Icon name="thumbs-up" size={30} color="#e3e3e3"  onPress={this.upVote} style={styles.vote} />
+
       </View>
     );
   }
@@ -50,22 +49,20 @@ var SingleMessageView = React.createClass({
 
 var styles = StyleSheet.create({
   messageViewContainer: {
-    borderBottomWidth: 1,
-    borderColor: '#e3e3e3',
-    height: 50,
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row'
-  },
-  vote: {
-    width: 50,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    marginTop:5,
+    marginBottom: 5
   },
   messageText: {
-    flex: 1
+    flex: 1,
+    fontSize: 40,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    fontWeight: '100',
+    fontFamily: 'Helvetica'
   }
 });
 
