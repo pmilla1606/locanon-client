@@ -13,8 +13,8 @@ var LoadingView = require('./components/loading_view_component');
 var SingleMessageView = require('./components/message_view_component');
 
 var ROUNDING_PRECISION = 3;
-var BASE_QUERY_URL = 'http://45.55.242.156:1337/app/' //prod
-//var BASE_QUERY_URL = 'http://localhost:1337/app/' //dev
+// var BASE_QUERY_URL = 'http://45.55.242.156:1337/app/' //prod
+var BASE_QUERY_URL = 'http://localhost:1337/app/' //dev
 
 var {
   AppRegistry,
@@ -55,8 +55,8 @@ var locanon = React.createClass({
 
   geoSuccess: function(position) {
     this.setState({
-      currentLong: round(position.coords.longitude, ROUNDING_PRECISION),
-      currentLat: round(position.coords.latitude, ROUNDING_PRECISION),
+      currentLong: position.coords.longitude,
+      currentLat: position.coords.latitude,
       loadingLocation: false
     });
 
@@ -85,7 +85,7 @@ var locanon = React.createClass({
     }
 
     var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    
+
     fetch(BASE_QUERY_URL+currentLocation, {
       method: 'get'
     })
@@ -118,8 +118,8 @@ var locanon = React.createClass({
       });
 
       data = {
-        lng: that.state.currentLong,
-        lat: that.state.currentLat,
+        lng: Number(that.state.currentLong),
+        lat: Number(that.state.currentLat),
         message: that.state.currentMessageInput
       };
 
@@ -147,7 +147,7 @@ var locanon = React.createClass({
 
     }
   },
-  
+
   // fetch helpers
   status: function (response) {
     console.log('status', response)
@@ -164,7 +164,7 @@ var locanon = React.createClass({
 
   render: function() {
     var loadingScreen = this.state.loadingLocation ? <LoadingView isLoading={true} /> : null;
-    return (        
+    return (
         <View style={styles.container}>
           <MapView
             style={styles.map}
@@ -179,9 +179,9 @@ var locanon = React.createClass({
             onChangeText={(text) => this.setState({currentMessageInput: text})}
             placeholder={'type some thoughts'}
           />
-          
-          <TouchableHighlight 
-            onPress={this.saveNewMessageForThisLocation} 
+
+          <TouchableHighlight
+            onPress={this.saveNewMessageForThisLocation}
             style={styles.submitButton}
             underlayColor={'#16a085'}>
             <Text style={styles.submitButtonText}>post some thoughts</Text>
