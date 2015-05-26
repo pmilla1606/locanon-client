@@ -69,7 +69,6 @@ var locanon = React.createClass({
   },
 
   getMessagesForThisLocation: function() {
-    console.log('fetching ow');
     var that = this;
     var currentLocation;
 
@@ -193,8 +192,6 @@ var locanon = React.createClass({
             loadData={this.getMessagesForThisLocation}
             refreshDescription="Loading..."
           />
-
-          <Text>{this.state.loadingLocation ? 'fetching' : ' ¯\\_(ツ)_/¯'}</Text>
         </View>
 
     );

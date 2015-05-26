@@ -26,22 +26,10 @@ var SingleMessageView = React.createClass({
       toValue: 1,
     });
   },
-  downVote: function(){
-    console.log('downvote ', this.props.message._id)
-  },
-  upVote: function() {
-    console.log('upvote ', this.props.message._id)
-  },
   render: function() {
-    //console.log(this.props)
     return(
       <View ref="singleMessageView" style={styles.messageViewContainer}>
-
-        
-
         <Text style={styles.messageText}>{this.props.message.messageString}</Text>
-        
-
       </View>
     );
   }

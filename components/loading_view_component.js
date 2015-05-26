@@ -44,8 +44,7 @@ var styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 300,
-    height: 300,
+    alignSelf: 'stretch',
     opacity: 0,
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)'
