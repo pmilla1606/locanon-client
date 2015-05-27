@@ -7,8 +7,8 @@
   },
   "dependencies": {
     "react-native": "^0.4.4",
+    "react-native-carousel": "^0.3.3",
     "react-native-refreshable-listview": "^1.2.0",
-    "react-native-vector-icons": "^0.3.3",
-    "stround": "^0.2.2"
+    "react-native-vector-icons": "^0.3.3"
   }
 }

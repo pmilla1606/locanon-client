@@ -5,17 +5,18 @@
 'use strict';
 
 var React = require('react-native');
-var stround = require('stround');
-var round = stround.round;
-var RefreshableListView = require('react-native-refreshable-listview')
+var RefreshableListView = require('react-native-refreshable-listview');
+
 // Components
 var LoadingView = require('./components/loading_view_component');
 var SingleMessageView = require('./components/message_view_component');
+var CarouselView = require('./components/carousel_view_component');
 
 var ROUNDING_PRECISION = 3;
 // var BASE_QUERY_URL = 'http://45.55.242.156:1337/app/' //prod
 var BASE_QUERY_URL = 'http://localhost:1337/app/' //dev
 
+var STORAGE_KEY = '@HasOnboarded:key';
 var {
   AppRegistry,
   StyleSheet,
@@ -26,7 +27,8 @@ var {
   ActivityIndicatorIOS,
   ListView,
   MapView,
-  ScrollView
+  ScrollView,
+  AsyncStorage
 } = React;
 
 var locanon = React.createClass({
@@ -39,6 +41,7 @@ var locanon = React.createClass({
       messagesAtThisLocation: null,
       loadingLocation: true,
       dataSource: ds.cloneWithRows(['row1', 'row2']),
+      hasSeenOnboarding: false
     }
   },
 
@@ -47,6 +50,16 @@ var locanon = React.createClass({
 
   componentDidMount: function() {
     this.geoInit();
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((value) => {
+        if (value !== null){
+          console.log(value);
+        } else {
+          console.log('nothing in async');
+        }
+      })
+      .catch((error) => console.log('AsyncStorage error: ' + error.message))
+      .done();
   },
 
   geoInit: function() {
@@ -162,39 +175,39 @@ var locanon = React.createClass({
   // end fetch helpers
 
   render: function() {
-    var loadingScreen = this.state.loadingLocation ? <LoadingView isLoading={true} /> : null;
-    return (
-        <View style={styles.container}>
-          <MapView
-            style={styles.map}
-            region={ {latitude: Number(this.state.currentLat), longitude: Number(this.state.currentLong), latitudeDelta: 10, longitudeDelta: 10} }
-            showsUserLocation={true}
-          />
-          <TextInput
-            style={styles.inputField}
-            enablesReturnKeyAutomatically={true}
-            returnKeyType="go"
-            clearTextOnFocue={true}
-            onChangeText={(text) => this.setState({currentMessageInput: text})}
-            placeholder={'type some thoughts'}
-          />
+    var view = this.state.hasSeenOnboarding ? 
+      <View style={styles.container}>
+        <MapView
+          style={styles.map}
+          region={ {latitude: Number(this.state.currentLat), longitude: Number(this.state.currentLong), latitudeDelta: 10, longitudeDelta: 10} }
+          showsUserLocation={true}
+        />
+        <TextInput
+          style={styles.inputField}
+          enablesReturnKeyAutomatically={true}
+          returnKeyType="go"
+          clearTextOnFocue={true}
+          onChangeText={(text) => this.setState({currentMessageInput: text})}
+          placeholder={'type some thoughts'}
+        />
 
-          <TouchableHighlight
-            onPress={this.saveNewMessageForThisLocation}
-            style={styles.submitButton}
-            underlayColor={'#16a085'}>
-            <Text style={styles.submitButtonText}>post some thoughts</Text>
-          </TouchableHighlight>
+        <TouchableHighlight
+          onPress={this.saveNewMessageForThisLocation}
+          style={styles.submitButton}
+          underlayColor={'#16a085'}>
+          <Text style={styles.submitButtonText}>post some thoughts</Text>
+        </TouchableHighlight>
 
-          <RefreshableListView
-            dataSource={this.state.dataSource}
-            renderRow={(rowData) => <SingleMessageView message={rowData}/>}
-            loadData={this.getMessagesForThisLocation}
-            refreshDescription="Loading..."
-          />
-        </View>
+        <RefreshableListView
+          dataSource={this.state.dataSource}
+          renderRow={(rowData) => <SingleMessageView message={rowData}/>}
+          loadData={this.getMessagesForThisLocation}
+          refreshDescription="Loading..."
+        />
+      </View> :
+      <CarouselView />
 
-    );
+    return view
   }
 });
 
